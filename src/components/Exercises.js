@@ -3,24 +3,19 @@ import { Pagination } from "@mui/material";
 import { Box, Stack, Typography } from "@mui/material";
 import { exerciseOptions, fetchData } from "../utils/fetchData";
 import ExerciseCard from "./ExerciseCard";
+import Loader from './Loader';
 
 const Exercises = ({ exercises, setExercises, bodyPart }) => {
-  console.log(exercises);
-
+  
+  console.log('hello', exercises);
   const [currentPage, setCurrentPage] = useState(1);
-  const perPage = 9;
+  const [exercisesPerPage] = useState(4);
+  let type = 2; // 2 => all, 1 => category
 
-  const indexOfLastExercise = currentPage * perPage;
-  const indexOfFirstExercise = indexOfLastExercise - perPage;
-  const currentExercises = exercises.slice(
-    indexOfFirstExercise,
-    indexOfLastExercise
-  );
+  
 
-  const paginate = (e, value) => {
-    setCurrentPage(value);
-    window.scrollTo({ top: 1800, behavior: "smooth" });
-  };
+
+  
   useEffect(() => {
 
     const fetchExercisesData = async () => {
@@ -28,21 +23,45 @@ const Exercises = ({ exercises, setExercises, bodyPart }) => {
       let exerciseData = [];
       if(bodyPart === 'all'){
         exerciseData = await fetchData(
-          "https://exercisedb.p.rapidapi.com/exercises",
-          exerciseOptions
+          "https://lightning-yoga-api.herokuapp.com/yoga_poses"
+          
         );
+        
+        type = 2;
+        setExercises(exerciseData.items);
+        //console.log('fuck', exerciseData)
+       
       } else{
         exerciseData = await fetchData(
-          `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`,
-          exerciseOptions);
+          `https://lightning-yoga-api.herokuapp.com/yoga_categories?yoga_category_name=${bodyPart}`
+          );
+          type = 1;
+          setExercises(exerciseData.items[0].yoga_poses)
+          //console.log('fcuk', exerciseData)
+          
       }
-      setExercises(exerciseData);
+      
+      
 
     }
     fetchExercisesData();
 
-    }, [bodyPart]
-)
+    }, [bodyPart])
+
+    // Pagination
+  const indexOfLastExercise = currentPage * exercisesPerPage;
+  const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
+  const currentExercises = exercises.slice(indexOfFirstExercise, indexOfLastExercise);
+
+  const paginate = (event, value) => {
+    setCurrentPage(value);
+
+    window.scrollTo({ top: 1800, behavior: 'smooth' });
+  };
+
+  if (!currentExercises.length) return <Loader />;
+
+    console.log('e', currentExercises)
 
   return (
     <Box
@@ -62,17 +81,19 @@ const Exercises = ({ exercises, setExercises, bodyPart }) => {
         flexWrap="wrap"
         justifyContent="center"
       >
+        
         {currentExercises.map((exercise, index) => (
-          <ExerciseCard key={index} exercise={exercise} />
+          <ExerciseCard key={index} exercise={exercise} bodyPart={bodyPart} type={type}/>
+          
         ))}
       </Stack>
-      <Stack mt="100px" alignItems="center">
-        {exercises.length > perPage && (
+      <Stack sx={{ mt: { lg: '114px', xs: '70px' } }} alignItems="center">
+        {exercises.length > 4 && (
           <Pagination
             color="standard"
             shape="rounded"
             defaultPage={1}
-            count={Math.ceil(exercises.length / perPage)}
+            count={Math.ceil(exercises.length / exercisesPerPage)}
             page={currentPage}
             onChange={paginate}
             size="large"

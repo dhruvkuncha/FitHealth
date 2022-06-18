@@ -1,41 +1,56 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
-import { exerciseOptions, fetchData } from "../utils/fetchData";
+import { exerciseOptions, fetchData, yogaOptions } from "../utils/fetchData";
 import HorizontalScrollBar from "./HorizontalScrollBar";
+import axios from "axios";
 
 const SearchExercises = ({setExercises, bodyPart, setBodyPart}) => {
   const [search, setSearch] = useState("");
-  
+  const url = 'https://lightning-yoga-api.herokuapp.com/yoga_categories'
   const [bodyParts, setBodyParts] = useState([])
 
   useEffect(() => {
+    
     const fetchExercisesData = async () => {
       const bodyPartsData = await fetchData(
-        "https://exercisedb.p.rapidapi.com/exercises/bodyPartList",
-        exerciseOptions
+        // "https://exercisedb.p.rapidapi.com/exercises/bodyPartList",
+        url
+        // exerciseOptions
       );
-      setBodyParts(["all", ...bodyPartsData]);
+      
+      const arr = Object.values(bodyPartsData.items)
+      const categoryList = []
+      Object.keys(arr).map(key => categoryList.push(arr[key].name));
+      setBodyParts(["all", ...categoryList]);
+      //console.log('hi', exerciseData);
+       
+      
     }
     fetchExercisesData();
-  }, []);
+    
+}, [])
 
-  const handleSearch = async () => {
-    if (search) {
+   const handleSearch = async () => {
+     if (search) {
       const exerciseData = await fetchData(
-        "https://exercisedb.p.rapidapi.com/exercises",
-        exerciseOptions
+        'https://lightning-yoga-api.herokuapp.com/yoga_poses'
+        
       );
-      console.log(exerciseData);
+      // const arr1 = Object.values(exerciseData.items)
+      // const posesList = []
+      // Object.keys(arr1).map(key => categoryList.push(arr1[key].name));
 
-      const searchedExercises = exerciseData.filter(
+      //console.log(exerciseData.items[0].id);
+
+      const searchedExercises = exerciseData.items.filter(
         (exercise) =>
-          exercise.name.toLowerCase().includes(search) ||
-          exercise.target.toLowerCase().includes(search) ||
-          exercise.equipment.toLowerCase().includes(search) ||
-          exercise.bodyPart.toLowerCase().includes(search)
+        // console.log(exercise.english_name.toLowerCase().includes('boat'))
+          exercise.sanskrit_name.toLowerCase().includes(search) ||
+          exercise.english_name.toLowerCase().includes(search) 
+          
       );
-      setSearch("");
+      setSearch(""); 
       setExercises(searchedExercises);
     }
   };
@@ -86,7 +101,8 @@ const SearchExercises = ({setExercises, bodyPart, setBodyPart}) => {
         </Button>
       </Box>
       <Box sx={{position: 'relative', width: '100%', p:'20px'}}>
-        <HorizontalScrollBar data={bodyParts} bodyPart={bodyPart} setBodyPart={setBodyPart}/>
+        <HorizontalScrollBar data={bodyParts} bodyPart={bodyPart} setBodyPart={setBodyPart}  />
+        
       </Box>
     </Stack>
   );
